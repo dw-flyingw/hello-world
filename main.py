@@ -1,4 +1,3 @@
-import os
 import platform
 import psutil
 import GPUtil
@@ -25,7 +24,6 @@ def get_server_info():
     # CPU
     info['cpu_count'] = psutil.cpu_count()
     info['cpu_cores'] = psutil.cpu_count(logical=False)  # Physical cores
-    info['cpu_freq'] = f"{psutil.cpu_freq().current:.2f} MHz"
 
     # Memory
     mem = psutil.virtual_memory()
@@ -71,11 +69,10 @@ if __name__ == "__main__":
     print(f"\nCPU:")
     print(f"  - Cores: {server_info['cpu_count']} (Logical)")
     print(f"  - Physical Cores: {server_info['cpu_cores']}")
-    print(f"  - Frequency: {server_info['cpu_freq']}")
     print(f"\nMemory:")
-    print(f"  - Total: {server_info['total_memory']} GB")
-    print(f"  - Used: {server_info['used_memory']} GB")
-    print(f"  - Free: {server_info['free_memory']} GB")
+    print(f"  - Total: {server_info['total_memory']}")
+    print(f"  - Used: {server_info['used_memory']}")
+    print(f"  - Free: {server_info['free_memory']}")
     print(f"\nGPU:")
     if isinstance(server_info['gpus'], list):
         for gpu_dict in server_info['gpus']:
