@@ -31,6 +31,24 @@ def get_server_info():
     info['used_memory'] = f"{mem.used / (1024 ** 3):.2f} GB"
     info['free_memory'] = f"{mem.free / (1024 ** 3):.2f} GB"
 
+
+    # Uptime
+    with open('/proc/uptime', 'r') as f:
+        uptime_seconds = float(f.readline().split()[0])
+        uptime_minutes = uptime_seconds // 60
+        uptime_hours = uptime_minutes // 60
+        uptime_days = uptime_hours // 24
+        uptime_hours = uptime_hours % 24
+        uptime_minutes = uptime_minutes % 60
+        info['uptime'] = f"{uptime_days}d {uptime_hours}h {uptime_minutes}m"
+
+    # Load Average (from /proc/loadavg)
+    with open('/proc/loadavg', 'r') as f:
+        load_avg = f.read().split()[:3]
+        info['load_avg_1min'] = load_avg[0]
+        info['load_avg_5min'] = load_avg[1]
+        info['load_avg_15min'] = load_avg[2]
+
     # GPU
     try:
         gpus = GPUtil.getGPUs()
@@ -70,9 +88,11 @@ if __name__ == "__main__":
     print(f"  - Cores: {server_info['cpu_count']} (Logical)")
     print(f"  - Physical Cores: {server_info['cpu_cores']}")
     print(f"\nMemory:")
-    print(f"  - Total: {server_info['total_memory']}")
-    print(f"  - Used: {server_info['used_memory']}")
-    print(f"  - Free: {server_info['free_memory']}")
+    print(f"  - Total: {server_info['total_memory']} GB")
+    print(f"  - Used: {server_info['used_memory']} GB")
+    print(f"  - Free: {server_info['free_memory']} GB")
+    print(f"\nUptime: {server_info['uptime']}")
+    print(f"\nLoad Average: 1-minute: {server_info['load_avg_1min']}, 5-minute: {server_info['load_avg_5min']}, 15-minute: {server_info['load_avg_15min']}")
     print(f"\nGPU:")
     if isinstance(server_info['gpus'], list):
         for gpu_dict in server_info['gpus']:
