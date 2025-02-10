@@ -1,51 +1,88 @@
-#print ("Hello World")
-
+import os
 import platform
 import psutil
-import cpuinfo
-import torch
+import GPUtil
+import subprocess
 
+def get_server_info():
+    """
+    Gathers information about the server.
 
-def get_system_info():
-    # Operating System Information
-    print("\n=== Operating System Information ===")
-    print(f"OS Name: {platform.system()}")
-    print(f"OS Version: {platform.version()}")
-    print(f"OS Release: {platform.release()}")
-    print(f"Machine Architecture: {platform.machine()}")
-    
-    # CPU Information
-    print("\n=== CPU Information ===")
-    cpu_info = cpuinfo.get_cpu_info()
-    print(f"CPU Brand: {cpu_info['brand_raw']}")
-    print(f"CPU Cores (Physical): {psutil.cpu_count(logical=False)}")
-    print(f"CPU Cores (Logical): {psutil.cpu_count(logical=True)}")
-    
-    # Memory Information
-    print("\n=== Memory Information ===")
-    memory = psutil.virtual_memory()
-    print(f"Total Memory: {memory.total / (1024**3):.2f} GB")
-    print(f"Available Memory: {memory.available / (1024**3):.2f} GB")
-    print(f"Memory Usage: {memory.percent}%")
-    
-def get_gpu_info():
-    # GPU Information
-    print("\n=== GPU Information ===")
-    gpu_names = []
-    if torch.cuda.is_available():
-        for i in range(torch.cuda.device_count()):
-            gpu_names.append(torch.cuda.get_device_name(i))
-    return gpu_names
+    Returns:
+        A dictionary containing server information.
+    """
+    info = {}
 
+    # Operating System
+    info['os_name'] = platform.system()
+    info['os_release'] = platform.release()
+    info['os_version'] = platform.version()
+    try:
+        info['lsb_release'] = subprocess.run(["lsb_release", "-a"], capture_output=True, text=True).stdout.strip()
+    except FileNotFoundError:
+        info['lsb_release'] = "lsb_release command not found."
+
+    # CPU
+    info['cpu_count'] = psutil.cpu_count()
+    info['cpu_cores'] = psutil.cpu_count(logical=False)  # Physical cores
+    info['cpu_freq'] = f"{psutil.cpu_freq().current:.2f} MHz"
+
+    # Memory
+    mem = psutil.virtual_memory()
+    info['total_memory'] = f"{mem.total / (1024 ** 3):.2f} GB"
+    info['used_memory'] = f"{mem.used / (1024 ** 3):.2f} GB"
+    info['free_memory'] = f"{mem.free / (1024 ** 3):.2f} GB"
+
+    # GPU
+    try:
+        gpus = GPUtil.getGPUs()
+        gpu_info = []
+        for i, gpu in enumerate(gpus):
+            gpu_info.append({
+                'GPU {}'.format(i+1): {
+                    'Name': gpu.name,
+                    'Total Memory': f"{gpu.memoryTotal / (1024 ** 3):.2f} GB",
+                    'Used Memory': f"{gpu.memoryUsed / (1024 ** 3):.2f} GB",
+                    'Free Memory': f"{gpu.memoryFree / (1024 ** 3):.2f} GB",
+                    'Load': f"{gpu.load * 100:.2f}%"
+                }
+            })
+        info['gpus'] = gpu_info
+    except ImportError:
+        info['gpus'] = "GPUtil library not found."
+    except Exception as e:
+        info['gpus'] = f"Error getting GPU information: {e}"
+
+    # vGPU (Placeholder - Difficult without nvidia-smi)
+    info['vgpu_present'] = "Unknown (vGPU detection without nvidia-smi is challenging)" 
+
+    return info
 
 if __name__ == "__main__":
-    get_system_info()
-    
+    server_info = get_server_info()
 
-    gpu_names = get_gpu_info()
-    if gpu_names:
-        print("Available GPUs:")
-    for i, gpu_name in enumerate(gpu_names):
-        print(f"  GPU {i}: {gpu_name}")
+    # Print in a more readable format
+    print("*** Server Information ***")
+    print(f"Operating System:")
+    print(f"  - Name: {server_info['os_name']}")
+    print(f"  - Release: {server_info['os_release']}")
+    print(f"  - Version: {server_info['os_version']}")
+    print(f"  - lsb_release: {server_info['lsb_release']}")
+    print(f"\nCPU:")
+    print(f"  - Cores: {server_info['cpu_count']} (Logical)")
+    print(f"  - Physical Cores: {server_info['cpu_cores']}")
+    print(f"  - Frequency: {server_info['cpu_freq']}")
+    print(f"\nMemory:")
+    print(f"  - Total: {server_info['total_memory']} GB")
+    print(f"  - Used: {server_info['used_memory']} GB")
+    print(f"  - Free: {server_info['free_memory']} GB")
+    print(f"\nGPU:")
+    if isinstance(server_info['gpus'], list):
+        for gpu_dict in server_info['gpus']:
+            for gpu_name, gpu_details in gpu_dict.items():
+                print(f"  - {gpu_name}:")
+                for key, value in gpu_details.items():
+                    print(f"    - {key}: {value}")
     else:
-        print("No GPU available.")
+        print(f"  - {server_info['gpus']}")
+    print(f"\nvGPU Presence: {server_info['vgpu_present']}")
