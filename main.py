@@ -1,7 +1,7 @@
 import platform
 import psutil
-import GPUtil
 import subprocess
+import pynvml
 
 def get_server_info():
     """
@@ -48,31 +48,75 @@ def get_server_info():
         info['load_avg_1min'] = load_avg[0]
         info['load_avg_5min'] = load_avg[1]
         info['load_avg_15min'] = load_avg[2]
-
-    # GPU
-    try:
-        gpus = GPUtil.getGPUs()
-        gpu_info = []
-        for i, gpu in enumerate(gpus):
-            gpu_info.append({
-                'GPU {}'.format(i+1): {
-                    'Name': gpu.name,
-                    'Total Memory': f"{gpu.memoryTotal / (1024 ** 3):.2f} GB",
-                    'Used Memory': f"{gpu.memoryUsed / (1024 ** 3):.2f} GB",
-                    'Free Memory': f"{gpu.memoryFree / (1024 ** 3):.2f} GB",
-                    'Load': f"{gpu.load * 100:.2f}%"
-                }
-            })
-        info['gpus'] = gpu_info
-    except ImportError:
-        info['gpus'] = "GPUtil library not found."
-    except Exception as e:
-        info['gpus'] = f"Error getting GPU information: {e}"
-
-    # vGPU (Placeholder - Difficult without nvidia-smi)
-    info['vgpu_present'] = "Unknown (vGPU detection without nvidia-smi is challenging)" 
-
     return info
+
+def get_gpu_info():
+    """
+    Get basic GPU information including type, memory usage, and utilization.
+    Returns a list of dictionaries containing information for each GPU.
+    """
+    try:
+        # Initialize NVML
+        pynvml.nvmlInit()
+        
+        gpu_info = []
+        device_count = pynvml.nvmlDeviceGetCount()
+        
+        for i in range(device_count):
+            handle = pynvml.nvmlDeviceGetHandleByIndex(i)
+            info = {}
+            
+            # Get GPU name/type
+            name = pynvml.nvmlDeviceGetName(handle)
+            info['name'] = name.decode() if isinstance(name, bytes) else name
+            
+            # Get memory info
+            memory = pynvml.nvmlDeviceGetMemoryInfo(handle)
+            info['memory'] = {
+                'total': f"{memory.total / (1024**2):.2f} MB",
+                'used': f"{memory.used / (1024**2):.2f} MB",
+                'free': f"{memory.free / (1024**2):.2f} MB"
+            }
+            
+            # Get GPU utilization
+            utilization = pynvml.nvmlDeviceGetUtilizationRates(handle)
+            info['utilization'] = {
+                'gpu': f"{utilization.gpu}%",
+                'memory': f"{utilization.memory}%"
+            }
+            
+            gpu_info.append(info)
+            
+    except pynvml.NVMLError as e:
+        print(f"Error getting GPU information: {e}")
+        return None
+        
+    finally:
+        try:
+            pynvml.nvmlShutdown()
+        except:
+            pass
+            
+    return gpu_info
+
+def print_gpu_info(gpu_info):
+    """
+    Print formatted GPU information
+    """
+    if not gpu_info:
+        print("No GPU information available")
+        return
+        
+    for i, gpu in enumerate(gpu_info):
+        print(f"\nGPU {i}:")
+        print(f"Name: {gpu['name']}")
+        print("\nMemory:")
+        print(f"  Total: {gpu['memory']['total']}")
+        print(f"  Used:  {gpu['memory']['used']}")
+        print(f"  Free:  {gpu['memory']['free']}")
+        print("\nUtilization:")
+        print(f"  GPU:    {gpu['utilization']['gpu']}")
+        print(f"  Memory: {gpu['utilization']['memory']}")
 
 if __name__ == "__main__":
     server_info = get_server_info()
@@ -88,18 +132,11 @@ if __name__ == "__main__":
     print(f"  - Cores: {server_info['cpu_count']} (Logical)")
     print(f"  - Physical Cores: {server_info['cpu_cores']}")
     print(f"\nMemory:")
-    print(f"  - Total: {server_info['total_memory']} GB")
-    print(f"  - Used: {server_info['used_memory']} GB")
-    print(f"  - Free: {server_info['free_memory']} GB")
+    print(f"  - Total: {server_info['total_memory']}")
+    print(f"  - Used: {server_info['used_memory']}")
+    print(f"  - Free: {server_info['free_memory']} ")
     print(f"\nUptime: {server_info['uptime']}")
     print(f"\nLoad Average: 1-minute: {server_info['load_avg_1min']}, 5-minute: {server_info['load_avg_5min']}, 15-minute: {server_info['load_avg_15min']}")
-    print(f"\nGPU:")
-    if isinstance(server_info['gpus'], list):
-        for gpu_dict in server_info['gpus']:
-            for gpu_name, gpu_details in gpu_dict.items():
-                print(f"  - {gpu_name}:")
-                for key, value in gpu_details.items():
-                    print(f"    - {key}: {value}")
-    else:
-        print(f"  - {server_info['gpus']}")
-    print(f"\nvGPU Presence: {server_info['vgpu_present']}")
+
+    gpu_info = get_gpu_info()
+    print_gpu_info(gpu_info)
