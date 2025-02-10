@@ -4,7 +4,7 @@ import platform
 import psutil
 import cpuinfo
 import torch
-#import GPUtil
+
 
 def get_system_info():
     # Operating System Information
