@@ -140,3 +140,5 @@ if __name__ == "__main__":
 
     gpu_info = get_gpu_info()
     print_gpu_info(gpu_info)
+
+    
