@@ -4,7 +4,7 @@ from openai import OpenAI
 from dotenv import load_dotenv
 
 # Load environment variables from the .env file
-dotenv_path = ('/home/dave.wright-hpe.com/dave-wright-hpe-5f2c6f61/.env')
+dotenv_path = ()
 load_dotenv(dotenv_path)
 openai_api_key = os.getenv("OPENAI_API_KEY")
 openai_api_base = os.getenv("OPENAI_API_BASE")
