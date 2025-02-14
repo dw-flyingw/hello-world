@@ -1,12 +1,13 @@
 # Hello World System Information 
 
 ## On remote container
-git clone https://github.com/dw-flyingw/hello-world && sh hello-world/run.sh
+git clone https://github.com/dw-flyingw/hello-world && sh hello-world/run.sh  
 
-git clone https://github.com/dw-flyingw/hello-world
+git clone https://github.com/dw-flyingw/hello-world  
 
-create .env 
+create .env  
 
-cd hello-world
+cd hello-world  
 
-python test-endpoint.py 
+python test-endpoint.py  
+
