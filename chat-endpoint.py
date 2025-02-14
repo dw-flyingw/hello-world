@@ -24,7 +24,7 @@ openai_api_base = "https://vllm-base-deployment-test-predictor-dave-wright-hpe-0
 # Geneva PCAI vllm-base-2 package and vllm-base-deployment 
 model = "microsoft/phi-4"
 openai_api_key = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3Mzk1NTA4NTMsImlzcyI6ImFpb2xpQGhwZS5jb20iLCJzdWIiOiJjZDkzMmZjZS05Yzg3LTQ0MTgtYmJmZS02YmZhMzY1YjM5Y2IiLCJ1c2VyIjoiZGF2ZS53cmlnaHQtaHBlLmNvbSJ9.WBgLvmO-lXvbsieBEVdC20Z0m3lC3NKOPkGOPmBFxV2bFtPW4fFm0ABqqAu_K-LjCJxAnD0iG3ED-Ck7orqOtOS4Cyjq87h-2krSXr_fuRe2-8ChBe5ZnJiG_Kjp2Z8oa65PP3wPKVJcAUbyGKdwRQy9YM9MYf0QX09Gwjag-ggpFKmBsqKnssGv4Gpyrh0U6-2VfPxuf30KHA_JWIIYmtTr5bFxsc7MO0XK30exBHABXv0Zg918ntkTJ1KnYpLYrmIYI_gda3PS07NJc0PN9EYZgdkl8OL0bLocyrh3pjGYi1BUi9JjJP2vPnETjJmp5mfD36byEaanDS3HpUvCmw"
-openai_api_base = "https://vllm-base-deployment-predictor-dave-wright-hpe-2dc7f199.hpepcai-ingress.pcai.hpecic.net"
+openai_api_base = "https://vllm-base-deployment-predictor-dave-wright-hpe-2dc7f199.hpepcai-ingress.pcai.hpecic.net/v1"
 
 
 
